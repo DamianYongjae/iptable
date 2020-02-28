@@ -2,6 +2,9 @@ import React from "react";
 import styled from "styled-components";
 import FatText from "./Text";
 import Button from "./Buttons";
+import Input from "./Input";
+import useInput from "../Hooks/useInput";
+import { toast } from "react-toastify";
 
 const Wrapper = styled.div`
   margin: 0 auto;
@@ -13,34 +16,33 @@ const Wrapper = styled.div`
   justify-content: center;
 `;
 
-const SearchInput = styled.input`
-  margin-top: 10px;
-  margin-left: 10px;
-  background-color: #fafafa;
-  padding: 5px;
-  font-size: 14px;
-  border-radius: 3px;
-  height: auto;
-  text-align: center;
-  width: 140px;
-  &::placeholder {
-    opacity: 0.8;
-    font-weight: 200;
-  }
-  :focus {
-    outline: none;
-  }
-`;
-
-const CustomButton = styled(Button)``;
-
 const Prompt = () => {
+  const input = useInput("");
+
+  const onKeyPress = async event => {
+    const { which } = event;
+    if (which === 13) {
+      event.preventDefault();
+      try {
+        toast.info("enter pressed. INPUT VALUE: " + input.value);
+        input.setValue("");
+      } catch {
+        toast.error("error occurred");
+      }
+    }
+  };
+
   return (
     <Wrapper>
       <FatText text={"PLEASE INPUT IP ADDRESS AND PRESS ENTER KEY!!!"} />
-      <SearchInput class="inputIP" type="text" placeholder="ex) 192.168.1.1" />
-      <CustomButton text={"export"} />
-      <CustomButton text={"import"} />
+      <Input
+        value={input.value}
+        onChange={input.onChange}
+        placeholder="ex) 192.168.1.1"
+        onKeyPress={onKeyPress}
+      />
+      <Button text={"export"} />
+      <Button text={"import"} />
     </Wrapper>
   );
 };
