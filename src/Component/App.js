@@ -4,6 +4,7 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Header from "./Header";
 import Prompt from "./Prompt";
+import TableContainer from "./Table/TableContainer";
 
 const Wrapper = styled.div`
   margin: 0 auto;
@@ -20,6 +21,7 @@ export default () => {
       <Header />
       <Wrapper>
         <Prompt />
+        <TableContainer />
       </Wrapper>
       <ToastContainer position={toast.POSITION.BOTTOM_LEFT} />
     </>

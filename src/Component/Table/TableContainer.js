@@ -1,9 +1,7 @@
 import React from "react";
-import PropTypes from "prop-types";
 import TablePresenter from "./TablePresenter";
-import { toast } from "react-toastify";
 
-const TableContainer = ({ id, ipAddr, inputDate }) => {
+const TableContainer = ({ id, ipAddr, inputDate, getTime }) => {
   return <TablePresenter id={id} ipAddr={ipAddr} inputDate={inputDate} />;
 };
 
