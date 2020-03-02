@@ -5,7 +5,7 @@ import FatText from "./Text";
 const Wrapper = styled.div`
   margin: 0 auto;
   width: 100%;
-  margin-top: 100px;
+  margin-top: 120px;
   align-items: center;
   text-align: center;
   justify-content: center;

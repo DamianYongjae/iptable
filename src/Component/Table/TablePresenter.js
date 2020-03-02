@@ -1,19 +1,24 @@
 import React from "react";
 import styled from "styled-components";
-import { makeStyles } from "@material-ui/core/styles";
-import Paper from "@material-ui/core/Paper";
-import Table from "@material-ui/core/Table";
-import TableBody from "@material-ui/core/TableBody";
-import TableCell from "@material-ui/core/TableCell";
-import TableContainer from "@material-ui/core/TableContainer";
-import TableHead from "@material-ui/core/TableHead";
-import TablePagination from "@material-ui/core/TablePagination";
-import TableRow from "@material-ui/core/TableRow";
+import {
+  Container,
+  Paper,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TablePagination,
+  TableRow
+} from "@material-ui/core";
 import Button from "../Buttons";
 import Input from "../Input";
 import useInput from "../../Hooks/useInput";
 import { toast } from "react-toastify";
 import { CSVLink } from "react-csv";
+import { Tooltip, Overlay } from "react-bootstrap";
+import "bootstrap/dist/css/bootstrap.min.css";
+import "../../Styles/modalStyle.css";
 
 const Wrapper = styled.div`
   width: 100%;
@@ -22,12 +27,6 @@ const Wrapper = styled.div`
   text-align: center;
   justify-content: center;
   justify: flex;
-`;
-
-const NewTable = styled(Table)`
-  justify: flex;
-  justify-content: center;
-  align-items: center;
 `;
 
 const Header = styled(TableHead)`
@@ -39,32 +38,80 @@ const Row = styled(TableRow)`
   text-align: center;
 `;
 
-const columns = [
-  { id: "ipAddr", label: "IP ADDRESS", minWidth: 170 },
-  { id: "inputDate", label: "Date Added", minWidth: 100 }
-];
-
-function createData(ipAddr, inputDate) {
-  return { ipAddr, inputDate };
-}
+var result = "";
 
 const rows = [];
 
 const data = [];
 
-const useStyles = makeStyles({
-  root: {
-    width: "60%"
-  },
-  container: {
-    maxHeight: "80%"
-  }
-});
-
-const TablePresenter = ({ id, ipAddr, inputDate }) => {
-  const classes = useStyles();
+const TablePresenter = ({
+  classes,
+  //   rows,
+  //   data,
+  //   input,
+  columns,
+  createData,
+  getTime,
+  validateIPAddress,
+  useStyles
+  //   onKeyPress
+}) => {
+  //   const classes = useStyles();
+  //   var Modal = ReactBootstrap.Modal;
   const [page, setPage] = React.useState(0);
   const [rowsPerPage, setRowsPerPage] = React.useState(10);
+  const [show, setShow] = React.useState(false);
+  const target = React.useRef(null);
+
+  function handleShowOverlay(ip = 0) {
+    // answer = getIpInfoByHover(ip);
+    const answer = {
+      ip: "173.67.12.12",
+      country_name: "United States",
+      state_prov: "VA",
+      city: "Baltimore",
+      isp: "Verizon Communications"
+    };
+
+    result =
+      "ip: " +
+      ip +
+      "\n" +
+      " country_name: " +
+      answer["country_name"] +
+      "\n" +
+      " state: " +
+      answer["state_prov"] +
+      "\n" +
+      " city: " +
+      answer["city"] +
+      "\n" +
+      " isp: " +
+      answer["isp"];
+    console.log(ip);
+    setShow(!show);
+  }
+
+  var IPGeolocationAPI = require("ip-geolocation-api-javascript-sdk");
+
+  var ipgeolocationApi = new IPGeolocationAPI(
+    "1d255992d5c340bb9f757bcc3c7708db",
+    false
+  );
+  function handleResponse(json) {
+    console.log(json);
+  }
+
+  const getIpInfoByHover = ip => {
+    var GeolocationParams = require("ip-geolocation-api-javascript-sdk/GeolocationParams.js");
+
+    var geolocationParams = new GeolocationParams();
+    geolocationParams.setIPAddress("173.67.12.12");
+    geolocationParams.setLang("en");
+    geolocationParams.setFields("country_name,state_prov,city,isp");
+
+    return ipgeolocationApi.getGeolocation(handleResponse, geolocationParams);
+  };
 
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
@@ -76,27 +123,6 @@ const TablePresenter = ({ id, ipAddr, inputDate }) => {
   };
 
   const input = useInput("");
-
-  function getTime() {
-    var tempDate = new Date();
-    var date =
-      tempDate.getMonth() +
-      1 +
-      "/" +
-      tempDate.getDate() +
-      "/" +
-      tempDate.getFullYear();
-    return date;
-  }
-
-  function validateIPAddress(inputText) {
-    var ipformat = /^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5]).){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$/;
-
-    if (ipformat.test(inputText)) {
-      return true;
-    }
-    return false;
-  }
 
   const onKeyPress = async event => {
     const { which } = event;
@@ -119,67 +145,104 @@ const TablePresenter = ({ id, ipAddr, inputDate }) => {
 
   return (
     <>
-      <Input
-        value={input.value}
-        onChange={input.onChange}
-        placeholder="ex) 192.168.1.1"
-        onKeyPress={onKeyPress}
-      />
-      <CSVLink data={data} filename={"list.csv"} enclosingCharacter={""}>
-        <Button text={"export"}></Button>
-      </CSVLink>
+      <Overlay target={target.current} show={show} placement="right">
+        {props => (
+          <Tooltip
+            id="overlay-example"
+            style={{ width: "180px", height: "300px" }}
+            {...props}
+          >
+            <p>
+              {result.split("\n").map((i, key) => {
+                return <div key={key}>{i}</div>;
+              })}
+            </p>
+          </Tooltip>
+        )}
+      </Overlay>
+      <Wrapper>
+        <Input
+          value={input.value}
+          onChange={input.onChange}
+          placeholder="ex) 192.168.1.1"
+          onKeyPress={onKeyPress}
+        />
+        <CSVLink data={data} filename={"list.csv"} enclosingCharacter={","}>
+          <Button text={"export"}></Button>
+        </CSVLink>
 
-      <Button text={"import"} />
-      <Paper className={classes.root}>
-        <Wrapper>
-          <TableContainer className={classes.container}>
-            <NewTable stickyHeader aria-label="sticky table">
-              <Header>
-                <Row>
-                  {columns.map(column => (
-                    <TableCell
-                      key={column.id}
-                      align={column.align}
-                      style={{ minWidth: column.minWidth }}
-                    >
-                      {column.label}
-                    </TableCell>
-                  ))}
-                </Row>
-              </Header>
-              <TableBody>
-                {rows
-                  .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                  .map(row => {
-                    return (
-                      <Row hover role="checkbox" tabIndex={-1} key={row.code}>
-                        {columns.map(column => {
-                          const value = row[column.id];
-                          return (
-                            <TableCell key={column.id} align={column.align}>
-                              {column.format && typeof value === "number"
-                                ? column.format(value)
-                                : value}
-                            </TableCell>
-                          );
-                        })}
-                      </Row>
-                    );
-                  })}
-              </TableBody>
-            </NewTable>
-          </TableContainer>
-          <TablePagination
-            rowsPerPageOptions={[10, 25, 100]}
-            component="div"
-            count={rows.length}
-            rowsPerPage={rowsPerPage}
-            page={page}
-            onChangePage={handleChangePage}
-            onChangeRowsPerPage={handleChangeRowsPerPage}
-          />
-        </Wrapper>
-      </Paper>
+        <Button text={"import"} />
+
+        <Container fixed>
+          <Paper className={classes.root}>
+            <Wrapper>
+              <TableContainer className={classes.container}>
+                <Table stickyHeader aria-label="sticky table">
+                  <Header>
+                    <Row>
+                      {columns.map(column => (
+                        <TableCell
+                          key={column.id}
+                          align={column.align}
+                          style={{ minWidth: column.minWidth }}
+                        >
+                          {column.label}
+                        </TableCell>
+                      ))}
+                    </Row>
+                  </Header>
+                  <TableBody>
+                    {rows
+                      .slice(
+                        page * rowsPerPage,
+                        page * rowsPerPage + rowsPerPage
+                      )
+                      .map(row => {
+                        return (
+                          <Row
+                            hover
+                            role="checkbox"
+                            tabIndex={-1}
+                            key={row.code}
+                            onMouseEnter={() => {
+                              handleShowOverlay(row["ipAddr"]);
+
+                              //   console.log(row["ipAddr"]);
+                              //   getIpInfoByHover(row["ipAddr"]);
+                            }}
+                            onMouseLeave={() => {
+                              handleShowOverlay();
+                            }}
+                          >
+                            {columns.map(column => {
+                              const value = row[column.id];
+                              return (
+                                <TableCell key={column.id} align={column.align}>
+                                  {column.format && typeof value === "number"
+                                    ? column.format(value)
+                                    : value}
+                                </TableCell>
+                              );
+                            })}
+                          </Row>
+                        );
+                      })}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+              <TablePagination
+                rowsPerPageOptions={[10, 25, 100]}
+                component="div"
+                count={rows.length}
+                rowsPerPage={rowsPerPage}
+                page={page}
+                onChangePage={handleChangePage}
+                onChangeRowsPerPage={handleChangeRowsPerPage}
+              />
+            </Wrapper>
+          </Paper>
+        </Container>
+      </Wrapper>
     </>
   );
 };

@@ -22,8 +22,10 @@ const Container = styled.button`
   }
 `;
 
-const Button = ({ text, onClick }) => (
-  <Container onClick={onClick}>{text}</Container>
+const Button = ({ text, onClick, id, className }) => (
+  <Container onClick={onClick} id={id} className={className}>
+    {text}
+  </Container>
 );
 
 Button.prototype = {
