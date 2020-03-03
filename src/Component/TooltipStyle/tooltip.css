@@ -1,0 +1,13 @@
+.tooltip-inner {
+  text-align: left;
+  background-color: #c7c7cf;
+  color: black;
+}
+
+.tooltip .arrow {
+  display: none;
+}
+
+.tooltip.show {
+  opacity: 0.7;
+}

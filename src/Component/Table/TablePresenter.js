@@ -18,7 +18,7 @@ import { toast } from "react-toastify";
 import { CSVLink } from "react-csv";
 import { Tooltip, Overlay } from "react-bootstrap";
 import "bootstrap/dist/css/bootstrap.min.css";
-import "../../Styles/modalStyle.css";
+import "../TooltipStyle/tooltip.css";
 
 const Wrapper = styled.div`
   width: 100%;
@@ -38,11 +38,19 @@ const Row = styled(TableRow)`
   text-align: center;
 `;
 
+const TooltipButton = styled(Button)`
+  padding: 0;
+  width: 20px;
+  height: 20px;
+  background-color: #c7c7cf;
+  color: black;
+`;
+
 var result = "";
 
 const rows = [];
 
-const data = [];
+var data = "";
 
 const TablePresenter = ({
   classes,
@@ -63,6 +71,10 @@ const TablePresenter = ({
   const [show, setShow] = React.useState(false);
   const target = React.useRef(null);
 
+  function closeOverlay() {
+    setShow(false);
+  }
+
   function handleShowOverlay(ip = 0) {
     // answer = getIpInfoByHover(ip);
     const answer = {
@@ -74,22 +86,21 @@ const TablePresenter = ({
     };
 
     result =
-      "ip: " +
+      "IP: " +
       ip +
       "\n" +
-      " country_name: " +
+      " Country: " +
       answer["country_name"] +
       "\n" +
-      " state: " +
+      " State: " +
       answer["state_prov"] +
       "\n" +
-      " city: " +
+      " City: " +
       answer["city"] +
       "\n" +
-      " isp: " +
+      " ISP: " +
       answer["isp"];
-    console.log(ip);
-    setShow(!show);
+    setShow(true);
   }
 
   var IPGeolocationAPI = require("ip-geolocation-api-javascript-sdk");
@@ -130,9 +141,15 @@ const TablePresenter = ({
       event.preventDefault();
       try {
         if (validateIPAddress(input.value)) {
-          rows.push(createData(input.value, getTime()));
-          data.push([input.value]);
-          toast.info("enter pressed. INPUT VALUE: " + input.value);
+          if (!data.includes(input.value)) {
+            data = data + input.value + "\n";
+            rows.push(createData(input.value, getTime()));
+
+            toast.info("enter pressed. INPUT VALUE: " + input.value);
+          } else {
+            toast.error("duplicated ip address");
+          }
+
           input.setValue("");
         } else {
           toast.error("please input appropriate ip address format");
@@ -147,16 +164,17 @@ const TablePresenter = ({
     <>
       <Overlay target={target.current} show={show} placement="right">
         {props => (
-          <Tooltip
-            id="overlay-example"
-            style={{ width: "180px", height: "300px" }}
-            {...props}
-          >
-            <p>
-              {result.split("\n").map((i, key) => {
-                return <div key={key}>{i}</div>;
-              })}
-            </p>
+          <Tooltip id="overlay-example" theme="lignt" {...props}>
+            <div style={{ textAlign: "right" }}>
+              <TooltipButton onClick={closeOverlay} text={"x"}></TooltipButton>
+            </div>
+            {result.split("\n").map((i, key) => {
+              return (
+                <div>
+                  <div key={key}>{i}</div>
+                </div>
+              );
+            })}
           </Tooltip>
         )}
       </Overlay>
@@ -167,7 +185,7 @@ const TablePresenter = ({
           placeholder="ex) 192.168.1.1"
           onKeyPress={onKeyPress}
         />
-        <CSVLink data={data} filename={"list.csv"} enclosingCharacter={","}>
+        <CSVLink data={data} filename={"list.csv"} enclosingCharacter={""}>
           <Button text={"export"}></Button>
         </CSVLink>
 
@@ -204,14 +222,11 @@ const TablePresenter = ({
                             role="checkbox"
                             tabIndex={-1}
                             key={row.code}
-                            onMouseEnter={() => {
+                            onClick={() => {
                               handleShowOverlay(row["ipAddr"]);
 
                               //   console.log(row["ipAddr"]);
                               //   getIpInfoByHover(row["ipAddr"]);
-                            }}
-                            onMouseLeave={() => {
-                              handleShowOverlay();
                             }}
                           >
                             {columns.map(column => {
