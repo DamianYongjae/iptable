@@ -1,6 +1,7 @@
 import React from "react";
 import axios from "axios";
 import styled from "styled-components";
+
 import {
   Container,
   Paper,
@@ -21,7 +22,6 @@ import { Tooltip, Overlay } from "react-bootstrap";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "../Style/tooltip.css";
 import "../Style/table.css";
-import Axios from "axios";
 
 const Wrapper = styled.div`
   width: 100%;
@@ -127,15 +127,9 @@ const TablePresenter = ({
   var createdData;
 
   const handleSubmit = event => {
-    console.log("inside handleSubmit");
-
     var data = createdData;
-    console.log(data);
 
-    axios.post(`http://localhost:3305`, data).then(res => {
-      console.log(res);
-      console.log(res.data);
-    });
+    axios.post(`http://localhost:3305`, data);
   };
 
   const onKeyPress = async event => {
@@ -204,6 +198,7 @@ const TablePresenter = ({
         </CSVLink>
 
         <Button text={"import"} />
+        <Button text={"search"} />
 
         <Container style={{ width: "60%" }}>
           <Paper className={classes.root}>

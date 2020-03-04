@@ -6,3 +6,18 @@
   padding-left: 16px;
   padding-right: 16px;
 }
+.MuiTableCell-stickyHeader {
+  top: 0;
+  left: 0;
+  z-index: 2;
+  position: sticky;
+  background-color: #fafafa;
+  text-align: center;
+}
+.MuiTableCell-body {
+  color: rgba(0, 0, 0, 0.87);
+  text-align: center;
+}
+.MuiPaper-elevation2 {
+  width: 60%;
+}

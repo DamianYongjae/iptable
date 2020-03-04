@@ -37,7 +37,8 @@ const TableContainer = () => {
       var ip = element["ipAddr"];
       var date = element["inputDate"].slice(0, 10);
       if (!rows.includes(ip)) {
-        rows.push(createData(ip, date));
+        var createdData = createData(ip, date);
+        rows.push(createdData);
         exportData.push([ip]);
       }
     });
@@ -55,8 +56,9 @@ const TableContainer = () => {
   }
 
   const columns = [
-    { id: "ipAddr", label: "IP ADDRESS", minWidth: 170 },
-    { id: "inputDate", label: "Date Added", minWidth: 100 }
+    { id: "ipAddr", label: "IP ADDRESS", minWidth: 70 },
+    { id: "inputDate", label: "Date Added", minWidth: 70 },
+    { id: "memo", label: "Memo", minWidth: 100 }
   ];
 
   function createData(ipAddr, inputDate) {
