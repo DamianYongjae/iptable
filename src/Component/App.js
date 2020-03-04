@@ -13,9 +13,6 @@ const Wrapper = styled.div`
 `;
 
 export default () => {
-  // const {
-  //   ipAddr
-  // }
   return (
     <>
       <Header />

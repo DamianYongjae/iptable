@@ -1,4 +1,5 @@
 import React from "react";
+import axios from "axios";
 import styled from "styled-components";
 import {
   Container,
@@ -18,7 +19,9 @@ import { toast } from "react-toastify";
 import { CSVLink } from "react-csv";
 import { Tooltip, Overlay } from "react-bootstrap";
 import "bootstrap/dist/css/bootstrap.min.css";
-import "../TooltipStyle/tooltip.css";
+import "../Style/tooltip.css";
+import "../Style/table.css";
+import Axios from "axios";
 
 const Wrapper = styled.div`
   width: 100%;
@@ -48,24 +51,19 @@ const TooltipButton = styled(Button)`
 
 var result = "";
 
-const rows = [];
-
-var data = "";
+var answer = { ip: "", country_name: "", state_prov: "", city: "", isp: "" };
 
 const TablePresenter = ({
   classes,
-  //   rows,
-  //   data,
-  //   input,
+  rows,
+  exportData,
   columns,
   createData,
   getTime,
   validateIPAddress,
-  useStyles
-  //   onKeyPress
+  useStyles,
+  includeIP
 }) => {
-  //   const classes = useStyles();
-  //   var Modal = ReactBootstrap.Modal;
   const [page, setPage] = React.useState(0);
   const [rowsPerPage, setRowsPerPage] = React.useState(10);
   const [show, setShow] = React.useState(false);
@@ -75,16 +73,7 @@ const TablePresenter = ({
     setShow(false);
   }
 
-  function handleShowOverlay(ip = 0) {
-    // answer = getIpInfoByHover(ip);
-    const answer = {
-      ip: "173.67.12.12",
-      country_name: "United States",
-      state_prov: "VA",
-      city: "Baltimore",
-      isp: "Verizon Communications"
-    };
-
+  function handleShowOverlay(ip) {
     result =
       "IP: " +
       ip +
@@ -110,18 +99,19 @@ const TablePresenter = ({
     false
   );
   function handleResponse(json) {
-    console.log(json);
+    answer = json;
+    handleShowOverlay(answer["ip"]);
   }
 
-  const getIpInfoByHover = ip => {
+  const getIpInfoByClick = ip => {
     var GeolocationParams = require("ip-geolocation-api-javascript-sdk/GeolocationParams.js");
 
     var geolocationParams = new GeolocationParams();
-    geolocationParams.setIPAddress("173.67.12.12");
+    geolocationParams.setIPAddress(ip);
     geolocationParams.setLang("en");
     geolocationParams.setFields("country_name,state_prov,city,isp");
 
-    return ipgeolocationApi.getGeolocation(handleResponse, geolocationParams);
+    ipgeolocationApi.getGeolocation(handleResponse, geolocationParams);
   };
 
   const handleChangePage = (event, newPage) => {
@@ -134,6 +124,19 @@ const TablePresenter = ({
   };
 
   const input = useInput("");
+  var createdData;
+
+  const handleSubmit = event => {
+    console.log("inside handleSubmit");
+
+    var data = createdData;
+    console.log(data);
+
+    axios.post(`http://localhost:3305`, data).then(res => {
+      console.log(res);
+      console.log(res.data);
+    });
+  };
 
   const onKeyPress = async event => {
     const { which } = event;
@@ -141,19 +144,21 @@ const TablePresenter = ({
       event.preventDefault();
       try {
         if (validateIPAddress(input.value)) {
-          if (!data.includes(input.value)) {
-            data = data + input.value + "\n";
-            rows.push(createData(input.value, getTime()));
+          if (!includeIP(exportData, input.value)) {
+            exportData.push([input.value]);
+            createdData = createData(input.value, getTime());
+            rows.push(createdData);
+            console.log(exportData);
 
             toast.info("enter pressed. INPUT VALUE: " + input.value);
           } else {
             toast.error("duplicated ip address");
           }
-
-          input.setValue("");
         } else {
           toast.error("please input appropriate ip address format");
         }
+        input.setValue("");
+        handleSubmit();
       } catch {
         toast.error("error occurred");
       }
@@ -162,9 +167,14 @@ const TablePresenter = ({
 
   return (
     <>
-      <Overlay target={target.current} show={show} placement="right">
+      <Overlay
+        key={"key"}
+        target={target.current}
+        show={show}
+        placement="right"
+      >
         {props => (
-          <Tooltip id="overlay-example" theme="lignt" {...props}>
+          <Tooltip id="overlay-example" theme="light" {...props}>
             <div style={{ textAlign: "right" }}>
               <TooltipButton onClick={closeOverlay} text={"x"}></TooltipButton>
             </div>
@@ -185,13 +195,17 @@ const TablePresenter = ({
           placeholder="ex) 192.168.1.1"
           onKeyPress={onKeyPress}
         />
-        <CSVLink data={data} filename={"list.csv"} enclosingCharacter={""}>
+        <CSVLink
+          data={exportData}
+          filename={"list.csv"}
+          // enclosingCharacter={""}
+        >
           <Button text={"export"}></Button>
         </CSVLink>
 
         <Button text={"import"} />
 
-        <Container fixed>
+        <Container style={{ width: "60%" }}>
           <Paper className={classes.root}>
             <Wrapper>
               <TableContainer className={classes.container}>
@@ -223,10 +237,7 @@ const TablePresenter = ({
                             tabIndex={-1}
                             key={row.code}
                             onClick={() => {
-                              handleShowOverlay(row["ipAddr"]);
-
-                              //   console.log(row["ipAddr"]);
-                              //   getIpInfoByHover(row["ipAddr"]);
+                              getIpInfoByClick(row["ipAddr"]);
                             }}
                           >
                             {columns.map(column => {
