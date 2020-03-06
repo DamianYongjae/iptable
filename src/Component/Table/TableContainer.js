@@ -14,6 +14,17 @@ const useStyles = makeStyles({
   },
   popover: {
     pointerEvents: "none"
+  },
+  visuallyHidden: {
+    border: 0,
+    clip: "rect(0 0 0 0)",
+    height: 1,
+    margin: -1,
+    overflow: "hidden",
+    padding: 0,
+    position: "absolute",
+    top: 20,
+    width: 1
   }
 });
 
@@ -26,6 +37,13 @@ const TableContainer = () => {
 
   const [table, setTable] = React.useState([]);
 
+  var IPGeolocationAPI = require("ip-geolocation-api-javascript-sdk");
+
+  var ipgeolocationApi = new IPGeolocationAPI(
+    "1d255992d5c340bb9f757bcc3c7708db",
+    false
+  );
+
   useEffect(() => {
     axios.get(`http://localhost:3305`).then(res => {
       setTable(res.data);
@@ -36,8 +54,10 @@ const TableContainer = () => {
     table.forEach(element => {
       var ip = element["ipAddr"];
       var date = element["inputDate"].slice(0, 10);
+      var memo = element["memo"];
+      var isBlack = element["isBlack"];
       if (!rows.includes(ip)) {
-        var createdData = createData(ip, date);
+        var createdData = createData(ip, date, memo, isBlack);
         rows.push(createdData);
         exportData.push([ip]);
       }
@@ -55,14 +75,8 @@ const TableContainer = () => {
     return false;
   }
 
-  const columns = [
-    { id: "ipAddr", label: "IP ADDRESS", minWidth: 70 },
-    { id: "inputDate", label: "Date Added", minWidth: 70 },
-    { id: "memo", label: "Memo", minWidth: 100 }
-  ];
-
-  function createData(ipAddr, inputDate) {
-    return { ipAddr, inputDate };
+  function createData(ipAddr, inputDate, memo = "", isBlack = true) {
+    return { ipAddr, inputDate, memo, isBlack };
   }
 
   function getTime() {
@@ -96,12 +110,12 @@ const TableContainer = () => {
       classes={classes}
       rows={rows}
       exportData={exportData}
-      useStyles={useStyles}
-      columns={columns}
+      ipgeolocationApi={ipgeolocationApi}
       createData={createData}
       getTime={getTime}
       validateIPAddress={validateIPAddress}
       includeIP={includeIP}
+      getDataFromDB={getDataFromDB}
     />
   );
 };

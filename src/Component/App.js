@@ -21,6 +21,10 @@ export default () => {
         <TableContainer />
       </Wrapper>
       <ToastContainer position={toast.POSITION.BOTTOM_LEFT} />
+      <link
+        rel="stylesheet"
+        href="https://fonts.googleapis.com/icon?family=Material+Icons"
+      />
     </>
   );
 };

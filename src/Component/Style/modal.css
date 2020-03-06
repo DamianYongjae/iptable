@@ -1,0 +1,20 @@
+.MuiPaper-elevation2 {
+  width: 100%;
+}
+
+.MuiIcon-root {
+  outline: none;
+}
+
+.close:hover {
+  background-color: rgba(0, 0, 0, 0.04);
+  outline: none;
+}
+
+[type="button"]:not(:disabled),
+[type="reset"]:not(:disabled),
+[type="submit"]:not(:disabled),
+button:not(:disabled) {
+  cursor: pointer;
+  outline: none;
+}

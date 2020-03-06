@@ -1,8 +1,9 @@
 import React from "react";
 import styled from "styled-components";
 import PropTypes from "prop-types";
+import { TextField } from "@material-ui/core";
 
-const Container = styled.input`
+const Container = styled(TextField)`
   margin-top: 10px;
   margin-left: 10px;
   background-color: #fafafa;

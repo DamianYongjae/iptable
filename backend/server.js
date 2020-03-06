@@ -47,9 +47,48 @@ app.get("/", (req, res) => {
 app.post("/", (req, res) => {
   let data = { ipAddr: req.body.ipAddr, inputDate: req.body.inputDate };
 
+  console.log("new row added: ", data);
   let sql = "insert into ips set ?";
-  let query = connection.query(sql, data, (err, results) => {
+  connection.query(sql, data, (err, results) => {
     if (err) throw err;
     res.redirect("/");
+    console.log("Added rows: ", results.affectedRows);
+  });
+});
+
+app.delete("/", (req, res) => {
+  let data = { ipAddr: req.query.data };
+  console.log("ipAddr: ", data);
+
+  let query = `delete from ips where ipAddr = '${data.ipAddr}'`;
+
+  connection.query(query, (error, results, fields) => {
+    if (error) throw error;
+    console.log("Deleted Row(s): ", results.affectedRows);
+  });
+});
+
+app.put("/", (req, res) => {
+  let memo = req.body.data.memo;
+  let ip = req.body.data.ipAddr;
+
+  let query = `update ips set memo = '${memo}' where ipAddr = '${ip}'`;
+  console.log("row updated: ", ip);
+  connection.query(query, (error, results, fields) => {
+    if (error) throw error;
+    console.log("Row affected: ", results.affectedRows);
+  });
+});
+
+app.put("/:Modal", (req, res) => {
+  let memo = req.body.data.memo;
+  let isBlack = req.body.data.isBlack === false ? 0 : 1;
+  let ip = req.body.data.ipAddr;
+
+  let query = `update ips set memo = '${memo}', isBlack = '${isBlack}' where ipAddr = '${ip}'`;
+  console.log("row updated: ", ip);
+  connection.query(query, (error, results, fields) => {
+    if (error) throw error;
+    console.log("Row affected: ", results.affectedRows);
   });
 });
