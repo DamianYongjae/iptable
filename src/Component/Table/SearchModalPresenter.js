@@ -19,7 +19,6 @@ const SearchModalPresenter = ({ rows, handleDeleteIp }) => {
 
   const handleUpdateInsideModal = (ipAddr, memo, isBlack) => {
     var data = { ipAddr: ipAddr, memo: memo, isBlack: isBlack };
-    console.log(data);
     axios.put(`http://localhost:3305/:Modal`, { data });
   };
 
@@ -42,6 +41,8 @@ const SearchModalPresenter = ({ rows, handleDeleteIp }) => {
                     newData.memo,
                     newData.isBlack
                   );
+                  toast.info("successfully update that row!!");
+
                   return { ...prevState, data };
                 });
               }

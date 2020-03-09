@@ -101,13 +101,10 @@ const useStyles = makeStyles(theme => ({
   }
 }));
 
-var result = "";
-
-var answer = { ip: "", country_name: "", state_prov: "", city: "", isp: "" };
-
-var deleteTarget;
-
 var addMemoTargetIp;
+var answer = { ip: "", country_name: "", state_prov: "", city: "", isp: "" };
+var deleteTarget;
+var result = "";
 
 function descendingComparator(a, b, orderBy) {
   if (b[orderBy] < a[orderBy]) {
@@ -151,25 +148,51 @@ const TablePresenter = ({
   ipgeolocationApi,
   separateTable
 }) => {
-  const [page, setPage] = React.useState(0);
-  const [rowsPerPage, setRowsPerPage] = React.useState(10);
-  const [show, setShow] = React.useState(false);
-  const [order, setOrder] = React.useState("asc");
-  const [orderBy, setOrderBy] = React.useState("calories");
-  const [selected, setSelected] = React.useState([]);
-  const [searchModal, setSearchModal] = React.useState(false);
   const [openAll, setOpenAll] = React.useState(false);
   const [openBlack, setOpenBlack] = React.useState(false);
-  const [openWhite, setOpenWhite] = React.useState(false);
   const [openMemo, setOpenMemo] = React.useState(false);
-  const target = React.useRef(null);
+  const [openWhite, setOpenWhite] = React.useState(false);
+  const [order, setOrder] = React.useState("asc");
+  const [orderBy, setOrderBy] = React.useState("calories");
+  const [page, setPage] = React.useState(0);
+  const [rowsPerPage, setRowsPerPage] = React.useState(10);
+  const [selected, setSelected] = React.useState([]);
+  const [searchModal, setSearchModal] = React.useState(false);
+  const [show, setShow] = React.useState(false);
 
-  const isSelected = name => selected.indexOf(name) !== -1;
   const input = useInput("");
   const inputMemo = useInput("");
+  const isSelected = name => selected.indexOf(name) !== -1;
+  const target = React.useRef(null);
+
   var createdData;
 
   classes = useStyles();
+
+  const refreshTables = () => {
+    rowBlack = [];
+    rowWhite = [];
+    exportBlackData = [];
+    exportWhiteData = [];
+
+    separateTable();
+  };
+
+  function handleResponse(json) {
+    answer = json;
+    handleShowOverlay(answer["ip"]);
+  }
+
+  const getIpInfoByClick = ip => {
+    var GeolocationParams = require("ip-geolocation-api-javascript-sdk/GeolocationParams.js");
+
+    var geolocationParams = new GeolocationParams();
+    geolocationParams.setIPAddress(ip);
+    geolocationParams.setLang("en");
+    geolocationParams.setFields("country_name,state_prov,city,isp");
+
+    ipgeolocationApi.getGeolocation(handleResponse, geolocationParams);
+  };
 
   const handleAllClick = () => {
     setOpenAll(!openAll);
@@ -238,6 +261,16 @@ const TablePresenter = ({
     setShow(false);
   }
 
+  const handleClickAddMemo = ip => {
+    addMemoTargetIp = ip;
+    setOpenMemo(true);
+  };
+
+  const handleMemoModalClose = () => {
+    refreshTables();
+    setOpenMemo(false);
+  };
+
   function handleShowOverlay(ip) {
     result =
       "IP: " +
@@ -256,22 +289,6 @@ const TablePresenter = ({
       answer["isp"];
     setShow(true);
   }
-
-  function handleResponse(json) {
-    answer = json;
-    handleShowOverlay(answer["ip"]);
-  }
-
-  const getIpInfoByClick = ip => {
-    var GeolocationParams = require("ip-geolocation-api-javascript-sdk/GeolocationParams.js");
-
-    var geolocationParams = new GeolocationParams();
-    geolocationParams.setIPAddress(ip);
-    geolocationParams.setLang("en");
-    geolocationParams.setFields("country_name,state_prov,city,isp");
-
-    ipgeolocationApi.getGeolocation(handleResponse, geolocationParams);
-  };
 
   const handleAddNewIp = event => {
     var data = createdData;
@@ -325,15 +342,6 @@ const TablePresenter = ({
     });
   };
 
-  const refreshTables = () => {
-    rowBlack = [];
-    rowWhite = [];
-    exportBlackData = [];
-    exportWhiteData = [];
-
-    separateTable();
-  };
-
   const onKeyPress = async event => {
     const { which } = event;
     if (which === 13) {
@@ -352,16 +360,6 @@ const TablePresenter = ({
     } catch {
       toast.error("error occurred while deleting");
     }
-  };
-
-  const handleClickAddMemo = ip => {
-    addMemoTargetIp = ip;
-    setOpenMemo(true);
-  };
-
-  const handleMemoModalClose = () => {
-    refreshTables();
-    setOpenMemo(false);
   };
 
   return (
@@ -443,8 +441,6 @@ const TablePresenter = ({
 
           <Button
             onClick={event => {
-              console.log(addMemoTargetIp);
-              console.log(inputMemo.value);
               handleAddMemo(event, addMemoTargetIp, inputMemo.value);
               handleMemoModalClose();
             }}
