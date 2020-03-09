@@ -53,7 +53,7 @@ const EnhancedTableToolbar = ({ numSelected, onDeleteClick }) => {
           </Typography>
         ) : (
           <Typography className={classes.title} variant="h6" id="tableTitle">
-            BlackList IP Addresses
+            All IP Addresses
           </Typography>
         )}
 

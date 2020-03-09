@@ -1,10 +1,11 @@
 import React from "react";
 import axios from "axios";
 import styled from "styled-components";
-import PropTypes from "prop-types";
 import { makeStyles } from "@material-ui/core/styles";
 import BlockIcon from "@material-ui/icons/Block";
 import InfoIcon from "@material-ui/icons/Info";
+import ListAltIcon from "@material-ui/icons/ListAlt";
+import LockOpenIcon from "@material-ui/icons/LockOpen";
 import ExpandLess from "@material-ui/icons/ExpandLess";
 import ExpandMore from "@material-ui/icons/ExpandMore";
 import AddCommentIcon from "@material-ui/icons/AddComment";
@@ -19,6 +20,7 @@ import {
   Checkbox,
   Paper,
   Table,
+  TableHead,
   TableBody,
   TableCell,
   TableContainer,
@@ -135,13 +137,19 @@ function stableSort(array, comparator) {
 
 const TablePresenter = ({
   classes,
+  columns,
   rows,
   exportData,
+  rowBlack,
+  rowWhite,
+  exportBlackData,
+  exportWhiteData,
   createData,
   getTime,
   validateIPAddress,
   includeIP,
-  ipgeolocationApi
+  ipgeolocationApi,
+  separateTable
 }) => {
   const [page, setPage] = React.useState(0);
   const [rowsPerPage, setRowsPerPage] = React.useState(10);
@@ -149,16 +157,35 @@ const TablePresenter = ({
   const [order, setOrder] = React.useState("asc");
   const [orderBy, setOrderBy] = React.useState("calories");
   const [selected, setSelected] = React.useState([]);
-  const [table, setTable] = React.useState(rows);
   const [searchModal, setSearchModal] = React.useState(false);
-  const [openBlack, setOpenBlack] = React.useState(true);
+  const [openAll, setOpenAll] = React.useState(false);
+  const [openBlack, setOpenBlack] = React.useState(false);
+  const [openWhite, setOpenWhite] = React.useState(false);
   const [openMemo, setOpenMemo] = React.useState(false);
   const target = React.useRef(null);
 
+  const isSelected = name => selected.indexOf(name) !== -1;
+  const input = useInput("");
+  const inputMemo = useInput("");
+  var createdData;
+
   classes = useStyles();
+
+  const handleAllClick = () => {
+    setOpenAll(!openAll);
+  };
 
   const handleBlackClick = () => {
     setOpenBlack(!openBlack);
+  };
+
+  const handleWhiteClick = () => {
+    setOpenWhite(!openWhite);
+  };
+
+  const handleSearchModelClose = () => {
+    refreshTables();
+    setSearchModal(!searchModal);
   };
 
   const handleRequestSort = (event, property) => {
@@ -197,8 +224,6 @@ const TablePresenter = ({
     setSelected(newSelected);
     return newSelected;
   };
-
-  const isSelected = name => selected.indexOf(name) !== -1;
 
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
@@ -248,10 +273,6 @@ const TablePresenter = ({
     ipgeolocationApi.getGeolocation(handleResponse, geolocationParams);
   };
 
-  const input = useInput("");
-  const inputMemo = useInput("");
-  var createdData;
-
   const handleAddNewIp = event => {
     var data = createdData;
 
@@ -269,25 +290,56 @@ const TablePresenter = ({
     window.location.reload();
   };
 
+  const addIpToTable = () => {
+    if (validateIPAddress(input.value)) {
+      if (!includeIP(exportData, input.value)) {
+        exportData.push([input.value]);
+        createdData = createData(input.value, getTime());
+        rows.push(createdData);
+        rowBlack.push(createdData);
+        exportBlackData.push([input.value]);
+        toast.info("enter pressed. INPUT VALUE: " + input.value);
+      } else {
+        toast.error("duplicated ip address");
+      }
+    } else {
+      toast.error("please input appropriate ip address format");
+    }
+    input.setValue("");
+    handleAddNewIp();
+  };
+
+  const deleteIpFromTable = event => {
+    deleteTarget.forEach(element => {
+      for (var i = 0; i < exportData.length; i++) {
+        if (exportData[i][0] === element) {
+          exportData.splice(i, 1);
+          rows.splice(i, 1);
+          handleClick(event, element);
+          handleDeleteIp(event, element);
+          toast.info("selected Ip addresses are deleted!");
+        }
+      }
+      setSelected([]);
+      refreshTables();
+    });
+  };
+
+  const refreshTables = () => {
+    rowBlack = [];
+    rowWhite = [];
+    exportBlackData = [];
+    exportWhiteData = [];
+
+    separateTable();
+  };
+
   const onKeyPress = async event => {
     const { which } = event;
     if (which === 13) {
       event.preventDefault();
       try {
-        if (validateIPAddress(input.value)) {
-          if (!includeIP(exportData, input.value)) {
-            exportData.push([input.value]);
-            createdData = createData(input.value, getTime());
-            rows.push(createdData);
-            toast.info("enter pressed. INPUT VALUE: " + input.value);
-          } else {
-            toast.error("duplicated ip address");
-          }
-        } else {
-          toast.error("please input appropriate ip address format");
-        }
-        input.setValue("");
-        handleAddNewIp();
+        addIpToTable();
       } catch {
         toast.error("error occurred while adding");
       }
@@ -296,18 +348,7 @@ const TablePresenter = ({
 
   const onDeleteClick = async event => {
     try {
-      deleteTarget.forEach(element => {
-        for (var i = 0; i < exportData.length; i++) {
-          if (exportData[i][0] === element) {
-            exportData.splice(i, 1);
-            rows.splice(i, 1);
-            handleClick(event, element);
-            handleDeleteIp(event, element);
-            toast.info("selected Ip addresses are deleted!");
-          }
-        }
-        setSelected([]);
-      });
+      deleteIpFromTable(event);
     } catch {
       toast.error("error occurred while deleting");
     }
@@ -319,6 +360,7 @@ const TablePresenter = ({
   };
 
   const handleMemoModalClose = () => {
+    refreshTables();
     setOpenMemo(false);
   };
 
@@ -345,7 +387,35 @@ const TablePresenter = ({
           </Tooltip>
         )}
       </Overlay>
-
+      <Modal
+        size="lg"
+        show={searchModal}
+        onHide={() => {
+          handleSearchModelClose();
+        }}
+        onExited={() => {
+          window.location.reload();
+        }}
+        aria-labelledby="example-modal-sizes-title-lg"
+      >
+        <Modal.Header closeButton>
+          <Modal.Title id="example-modal-sizes-title-lg">Search</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <SearchModalPresenter
+            answer={answer}
+            classes={classes}
+            rows={rows}
+            exportData={exportData}
+            ipgeolocationApi={ipgeolocationApi}
+            createData={createData}
+            getTime={getTime}
+            validateIPAddress={validateIPAddress}
+            includeIP={includeIP}
+            handleDeleteIp={handleDeleteIp}
+          />
+        </Modal.Body>
+      </Modal>
       <Dialog
         id={addMemoTargetIp}
         open={openMemo}
@@ -399,47 +469,16 @@ const TablePresenter = ({
           aria-labelledby="nested-list-subheader"
           className={classes.root}
         >
-          <ListItem button onClick={handleBlackClick}>
+          <ListItem button onClick={handleAllClick}>
             <ListItemIcon>
-              <BlockIcon />
+              <ListAltIcon />
             </ListItemIcon>
-            <ListItemText primary="Black List" />
-            {openBlack ? <ExpandLess /> : <ExpandMore />}
+            <ListItemText primary="View All List" />
+            {openAll ? <ExpandLess /> : <ExpandMore />}
           </ListItem>
-          <Collapse in={openBlack} timeout="auto" unmountOnExit>
+          <Collapse in={openAll} timeout="auto" unmountOnExit>
             <List component="div" disablePadding>
               <ListItem className={classes.nested}>
-                <Modal
-                  size="lg"
-                  show={searchModal}
-                  onHide={() => {
-                    setSearchModal(false);
-                  }}
-                  onExited={() => {
-                    window.location.reload();
-                  }}
-                  aria-labelledby="example-modal-sizes-title-lg"
-                >
-                  <Modal.Header closeButton>
-                    <Modal.Title id="example-modal-sizes-title-lg">
-                      Search
-                    </Modal.Title>
-                  </Modal.Header>
-                  <Modal.Body>
-                    <SearchModalPresenter
-                      answer={answer}
-                      classes={classes}
-                      rows={rows}
-                      exportData={exportData}
-                      ipgeolocationApi={ipgeolocationApi}
-                      createData={createData}
-                      getTime={getTime}
-                      validateIPAddress={validateIPAddress}
-                      includeIP={includeIP}
-                      handleDeleteIp={handleDeleteIp}
-                    />
-                  </Modal.Body>
-                </Modal>
                 <Container style={{ width: "85%" }}>
                   <Paper className={classes.root}>
                     <Wrapper>
@@ -543,17 +582,33 @@ const TablePresenter = ({
                                         row.memo
                                       )}
                                     </TableCell>
+                                    <TableCell
+                                      align="center"
+                                      padding="checkbox"
+                                    >
+                                      {row.isBlack === 1 ? (
+                                        <ButtonTooltip
+                                          title="Black list"
+                                          aria-label="info"
+                                        >
+                                          <BlockIcon />
+                                        </ButtonTooltip>
+                                      ) : (
+                                        <ButtonTooltip
+                                          title="White list"
+                                          aria-label="info"
+                                        >
+                                          <LockOpenIcon />
+                                        </ButtonTooltip>
+                                      )}
+                                    </TableCell>
                                   </Row>
                                 );
                               })}
                           </TableBody>
                         </Table>
                       </TableContainer>
-                      <div style={{ paddingTop: "10px", textAlign: "left" }}>
-                        <CSVLink data={exportData} filename={"list.csv"}>
-                          <Button text={"export"}></Button>
-                        </CSVLink>
-                      </div>
+
                       <TablePagination
                         rowsPerPageOptions={[10, 25, 100]}
                         component="div"
@@ -564,6 +619,173 @@ const TablePresenter = ({
                         onChangeRowsPerPage={handleChangeRowsPerPage}
                       />
                     </Wrapper>
+                  </Paper>
+                </Container>
+              </ListItem>
+            </List>
+          </Collapse>
+          <ListItem button onClick={handleBlackClick}>
+            <ListItemIcon>
+              <BlockIcon />
+            </ListItemIcon>
+            <ListItemText primary="Black List" />
+            {openBlack ? <ExpandLess /> : <ExpandMore />}
+          </ListItem>
+          <Collapse in={openBlack} timeout="auto" unmountOnExit>
+            <List component="div" disablePadding>
+              <ListItem className={classes.nested}>
+                <Container style={{ width: "85%" }}>
+                  <Paper className={classes.root}>
+                    <TableContainer className={classes.container}>
+                      <Table stickyHeader aria-label="sticky table">
+                        <TableHead>
+                          <TableRow>
+                            {columns.map(column => (
+                              <TableCell
+                                key={column.id}
+                                align={column.align}
+                                style={{ minWidth: column.minWidth }}
+                              >
+                                {column.label}
+                              </TableCell>
+                            ))}
+                          </TableRow>
+                        </TableHead>
+                        <TableBody>
+                          {rowBlack
+                            .slice(
+                              page * rowsPerPage,
+                              page * rowsPerPage + rowsPerPage
+                            )
+                            .map(row => {
+                              return (
+                                <TableRow
+                                  hover
+                                  role="checkbox"
+                                  tabIndex={-1}
+                                  key={row.ipAddr}
+                                >
+                                  {columns.map(column => {
+                                    const value = row[column.id];
+                                    return (
+                                      <TableCell
+                                        key={column.id}
+                                        align={column.align}
+                                      >
+                                        {column.format &&
+                                        typeof value === "number"
+                                          ? column.format(value)
+                                          : value}
+                                      </TableCell>
+                                    );
+                                  })}
+                                </TableRow>
+                              );
+                            })}
+                        </TableBody>
+                      </Table>
+                      <div style={{ paddingTop: "10px", textAlign: "left" }}>
+                        <CSVLink
+                          data={exportBlackData}
+                          filename={"blacklist.csv"}
+                        >
+                          <Button text={"export"}></Button>
+                        </CSVLink>
+                      </div>
+                    </TableContainer>
+                    <TablePagination
+                      rowsPerPageOptions={[10, 25, 100]}
+                      component="div"
+                      count={rowBlack.length}
+                      rowsPerPage={rowsPerPage}
+                      page={page}
+                      onChangePage={handleChangePage}
+                      onChangeRowsPerPage={handleChangeRowsPerPage}
+                    />
+                  </Paper>
+                </Container>
+              </ListItem>
+            </List>
+          </Collapse>
+
+          <ListItem button onClick={handleWhiteClick}>
+            <ListItemIcon>
+              <LockOpenIcon />
+            </ListItemIcon>
+            <ListItemText primary="White List" />
+            {openWhite ? <ExpandLess /> : <ExpandMore />}
+          </ListItem>
+          <Collapse in={openWhite} timeout="auto" unmountOnExit>
+            <List component="div" disablePadding>
+              <ListItem className={classes.nested}>
+                <Container style={{ width: "85%" }}>
+                  <Paper className={classes.root}>
+                    <TableContainer className={classes.container}>
+                      <Table stickyHeader aria-label="sticky table">
+                        <TableHead>
+                          <TableRow>
+                            {columns.map(column => (
+                              <TableCell
+                                key={column.id}
+                                align={column.align}
+                                style={{ minWidth: column.minWidth }}
+                              >
+                                {column.label}
+                              </TableCell>
+                            ))}
+                          </TableRow>
+                        </TableHead>
+                        <TableBody>
+                          {rowWhite
+                            .slice(
+                              page * rowsPerPage,
+                              page * rowsPerPage + rowsPerPage
+                            )
+                            .map(row => {
+                              return (
+                                <TableRow
+                                  hover
+                                  role="checkbox"
+                                  tabIndex={-1}
+                                  key={row.ipAddr}
+                                >
+                                  {columns.map(column => {
+                                    const value = row[column.id];
+                                    return (
+                                      <TableCell
+                                        key={column.id}
+                                        align={column.align}
+                                      >
+                                        {column.format &&
+                                        typeof value === "number"
+                                          ? column.format(value)
+                                          : value}
+                                      </TableCell>
+                                    );
+                                  })}
+                                </TableRow>
+                              );
+                            })}
+                        </TableBody>
+                      </Table>
+                      <div style={{ paddingTop: "10px", textAlign: "left" }}>
+                        <CSVLink
+                          data={exportWhiteData}
+                          filename={"whitelist.csv"}
+                        >
+                          <Button text={"export"}></Button>
+                        </CSVLink>
+                      </div>
+                    </TableContainer>
+                    <TablePagination
+                      rowsPerPageOptions={[10, 25, 100]}
+                      component="div"
+                      count={rowWhite.length}
+                      rowsPerPage={rowsPerPage}
+                      page={page}
+                      onChangePage={handleChangePage}
+                      onChangeRowsPerPage={handleChangeRowsPerPage}
+                    />
                   </Paper>
                 </Container>
               </ListItem>

@@ -35,6 +35,21 @@ const TableContainer = () => {
 
   const exportData = [];
 
+  var rowBlack = [];
+  var exportBlackData = [];
+  var rowWhite = [];
+  var exportWhiteData = [];
+
+  const columns = [
+    { id: "ipAddr", label: "IP ADDRESS", minWidth: 170 },
+    { id: "inputDate", label: "Date Added", minWidth: 100 },
+    {
+      id: "memo",
+      label: "Memo",
+      minWidth: 170
+    }
+  ];
+
   const [table, setTable] = React.useState([]);
 
   var IPGeolocationAPI = require("ip-geolocation-api-javascript-sdk");
@@ -43,6 +58,18 @@ const TableContainer = () => {
     "1d255992d5c340bb9f757bcc3c7708db",
     false
   );
+
+  const separateTable = () => {
+    rows.forEach(row => {
+      if (row.isBlack) {
+        rowBlack.push(row);
+        exportBlackData.push([row.ipAddr]);
+      } else {
+        rowWhite.push(row);
+        exportWhiteData.push([row.ipAddr]);
+      }
+    });
+  };
 
   useEffect(() => {
     axios.get(`http://localhost:3305`).then(res => {
@@ -62,6 +89,7 @@ const TableContainer = () => {
         exportData.push([ip]);
       }
     });
+    separateTable();
   }
 
   getDataFromDB(table);
@@ -108,14 +136,20 @@ const TableContainer = () => {
     <TablePresenter
       answer={answer}
       classes={classes}
+      columns={columns}
       rows={rows}
       exportData={exportData}
+      rowBlack={rowBlack}
+      rowWhite={rowWhite}
+      exportBlackData={exportBlackData}
+      exportWhiteData={exportWhiteData}
       ipgeolocationApi={ipgeolocationApi}
       createData={createData}
       getTime={getTime}
       validateIPAddress={validateIPAddress}
       includeIP={includeIP}
       getDataFromDB={getDataFromDB}
+      separateTable={separateTable}
     />
   );
 };

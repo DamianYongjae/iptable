@@ -20,7 +20,8 @@ const Row = styled(TableRow)`
 const headCells = [
   { id: "ipAddr", disablePadding: true, label: "IP ADDRESS" },
   { id: "inputDate", disablePadding: false, label: "Date Added" },
-  { id: "memo", disablePadding: false, label: "Memo" }
+  { id: "memo", disablePadding: false, label: "Memo" },
+  { id: "isBlack", label: "Type" }
 ];
 
 const EnhancedTableHead = ({
