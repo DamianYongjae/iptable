@@ -45,8 +45,13 @@ app.get("/", (req, res) => {
 });
 
 app.post("/", (req, res) => {
-  let data = { ipAddr: req.body.ipAddr, inputDate: req.body.inputDate };
-
+  let data = {
+    ipAddr: req.body.ipAddr,
+    inputDate: req.body.inputDate,
+    memo: req.body.memo,
+    isBlack: req.body.isBlack
+  };
+  // console.log(req.body);
   console.log("new row added: ", data);
   let sql = "insert into ips set ?";
   connection.query(sql, data, (err, results) => {
