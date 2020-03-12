@@ -164,7 +164,8 @@ const TablePresenter = ({
   validateIPAddress,
   includeIP,
   ipgeolocationApi,
-  separateTable
+  separateTable,
+  buildFileSelector
 }) => {
   const [openAll, setOpenAll] = React.useState(false);
   const [openBlack, setOpenBlack] = React.useState(false);
@@ -181,15 +182,18 @@ const TablePresenter = ({
   const [selected, setSelected] = React.useState([]);
   const [searchModal, setSearchModal] = React.useState(false);
   const [show, setShow] = React.useState(false);
-  const [table, setTable] = React.useState();
 
   const input = useInput("");
   const inputMemo = useInput("");
   const inputMulti = useInput("");
   const isSelected = name => selected.indexOf(name) !== -1;
   const target = React.useRef(null);
+  const fileSelector = buildFileSelector();
 
+  var importedFile;
   var createdData;
+
+  let fileReader;
 
   classes = useStyles();
   const textFieldClass = useStylesTextField();
@@ -199,6 +203,21 @@ const TablePresenter = ({
     rowWhite = [];
 
     separateTable();
+  };
+
+  const getTimeFromImport = time => {
+    var date = time.split(" ");
+    var tempDate = new Date();
+    var month = new Date(Date.parse(date[0] + " 1, 2013")).getMonth() + 1;
+    var day = date[1];
+    if (month < 10) {
+      month = "0" + month;
+    }
+    if (day < 10) {
+      day = "0" + day;
+    }
+
+    return tempDate.getFullYear() + "-" + month + "-" + day;
   };
 
   function handleResponse(json) {
@@ -230,7 +249,6 @@ const TablePresenter = ({
   };
 
   const handleSearchModelClose = () => {
-    refreshTables();
     setSearchModal(!searchModal);
   };
 
@@ -266,7 +284,7 @@ const TablePresenter = ({
         selected.slice(selectedIndex + 1)
       );
     }
-
+    deleteTarget = newSelected;
     setSelected(newSelected);
     return newSelected;
   };
@@ -344,9 +362,7 @@ const TablePresenter = ({
   const handleAddMemo = (event, ip, memo) => {
     var data = { ipAddr: ip, memo: memo };
 
-    axios.put(`http://localhost:3305`, { data }).then(res => {
-      setTable(res.data);
-    });
+    axios.put(`http://localhost:3305`, { data });
     window.location.reload();
   };
 
@@ -358,9 +374,9 @@ const TablePresenter = ({
         rows.push(createdData);
         rowBlack.push(createdData);
         toast.info("enter pressed. INPUT VALUE: " + value);
-        handleAddNewIp();
+        handleAddNewIp(createdData);
       } else {
-        toast.error("duplicated ip address");
+        toast.error("duplicated ip address: " + value);
       }
     } else {
       toast.error("please input appropriate ip address format");
@@ -387,7 +403,7 @@ const TablePresenter = ({
         }
       }
       setSelected([]);
-      refreshTables();
+      window.location.reload();
     });
   };
 
@@ -409,6 +425,72 @@ const TablePresenter = ({
     } catch {
       toast.error("error occurred while deleting");
     }
+  };
+
+  const addImportedDataToTable = data => {
+    data.forEach(element => {
+      if (validateIPAddress(element["ipAddr"])) {
+        if (!includeIP(exportData, element["ipAddr"])) {
+          exportData.push([element["ipAddr"]]);
+          rows.push(element);
+          rowBlack.push(element);
+          toast.info("enter pressed. INPUT VALUE: " + element["ipAddr"]);
+          createdData = element;
+          handleAddNewIp();
+        } else {
+          toast.error("duplicated ip address: " + element["ipAddr"]);
+        }
+      } else {
+        toast.error("please input appropriate ip address format");
+      }
+    });
+    // window.location.reload();
+    input.setValue("");
+    refreshTables();
+  };
+
+  fileSelector.addEventListener("change", handleFiles, false);
+
+  function handleFiles(e) {
+    if (e.target.files.length > 0) handleFileChosen(e.target.files[0]);
+  }
+
+  const onImportClick = event => {
+    event.preventDefault();
+    fileSelector.click();
+  };
+
+  const handleFileRead = e => {
+    const content = fileReader.result;
+    const data = content.split("\n");
+    const inputData = extractDataFromFile(data);
+    addImportedDataToTable(inputData);
+  };
+
+  const handleFileChosen = file => {
+    fileReader = new FileReader();
+    fileReader.onloadend = handleFileRead;
+    fileReader.readAsText(file);
+  };
+
+  const extractDataFromFile = data => {
+    var result = [];
+    var row = [];
+    data.forEach(element => {
+      if (element !== "") {
+        var date = getTimeFromImport(element.substring(0, 6));
+        var ip = element.slice(
+          element.indexOf("SRC") + 4,
+          element.indexOf(" DST")
+        );
+        var m =
+          element.slice(element.indexOf("DST"), element.indexOf(" LEN")) +
+          "\n" +
+          element.slice(element.indexOf("DPT"), element.indexOf(" WINDOW"));
+        row.push({ ipAddr: ip, inputDate: date, memo: m, isBlack: 1 });
+      }
+    });
+    return row;
   };
 
   return (
@@ -535,7 +617,15 @@ const TablePresenter = ({
           </IconButton>
         </Paper>
         <span style={{ padding: "10px 10px" }}>
-          <Button text={"import"} />
+          <Button
+            text={"import"}
+            onClick={event => {
+              onImportClick(event);
+            }}
+            onChange={e => {
+              handleFileChosen(e.target.files[0]);
+            }}
+          />
 
           <Button text={"search"} onClick={() => setSearchModal(true)} />
         </span>

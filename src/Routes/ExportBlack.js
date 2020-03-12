@@ -5,17 +5,18 @@ import Loader from "../Component/Loader";
 
 export default () => {
   const [inProcess, setInProcess] = React.useState(true);
-
   useEffect(() => {
     const getData = async () => {
       try {
-        await axios
-          .get(`http://localhost:3305/:exportBlack`)
-          .then(setInProcess(!inProcess));
+        await axios.get(`http://localhost:3305/:exportFile`, {
+          params: { table: "black" }
+        });
+        setInProcess(!inProcess);
       } catch (error) {
         console.log(error);
       }
     };
+
     getData();
   }, [inProcess, setInProcess]);
 
@@ -36,8 +37,9 @@ export default () => {
   }
   return (
     <>
-      {inProcess && <Loader />}
-      {!inProcess && <Redirect to="/" />}
+      {inProcess ? <Loader /> : <Redirect to="/" />}
+      {/* {inProcess && <Loader />}
+      {!inProcess && <Redirect to="/" />} */}
     </>
   );
 };

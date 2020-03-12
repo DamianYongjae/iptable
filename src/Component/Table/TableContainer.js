@@ -128,6 +128,12 @@ const TableContainer = () => {
     return answer;
   }
 
+  const buildFileSelector = () => {
+    const fileSelector = document.createElement("input");
+    fileSelector.setAttribute("type", "file");
+    return fileSelector;
+  };
+
   return (
     <TablePresenter
       answer={answer}
@@ -144,6 +150,7 @@ const TableContainer = () => {
       includeIP={includeIP}
       getDataFromDB={getDataFromDB}
       separateTable={separateTable}
+      buildFileSelector={buildFileSelector}
     />
   );
 };

@@ -4,22 +4,23 @@ import { Redirect } from "react-router-dom";
 import Loader from "../Component/Loader";
 
 export default () => {
-  const [inProcess, setInProcess] = React.useState(true);
+  const [inProcessW, setInProcessW] = React.useState(true);
 
   useEffect(() => {
     const getData = async () => {
       try {
-        await axios
-          .get(`http://localhost:3305/:exportWhite`)
-          .then(setInProcess(!inProcess));
+        await axios.get("http://localhost:3305/:exportFile", {
+          params: { table: "white" }
+        });
+        setInProcessW(!inProcessW);
       } catch (error) {
         console.log(error);
       }
     };
     getData();
-  }, [inProcess, setInProcess]);
+  }, [inProcessW, setInProcessW]);
 
-  if (!inProcess) {
+  if (!inProcessW) {
     fetch(`http://localhost:3305/downloadWhite`)
       .then(response => {
         response.blob().then(blob => {
@@ -36,8 +37,8 @@ export default () => {
   }
   return (
     <>
-      {inProcess && <Loader />}
-      {!inProcess && <Redirect to="/" />}
+      {inProcessW && <Loader />}
+      {!inProcessW && <Redirect to="/" />}
     </>
   );
 };
