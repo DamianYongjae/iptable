@@ -3,8 +3,6 @@ import axios from "axios";
 import { makeStyles } from "@material-ui/core/styles";
 import TablePresenter from "./TablePresenter";
 
-var answer = { ip: "", country_name: "", state_prov: "", city: "", isp: "" };
-
 const useStyles = makeStyles({
   root: {
     width: "100%"
@@ -134,9 +132,23 @@ const TableContainer = () => {
     return fileSelector;
   };
 
+  const getTimeFromImport = time => {
+    var date = time.split(" ");
+    var tempDate = new Date();
+    var month = new Date(Date.parse(date[0] + " 1, 2013")).getMonth() + 1;
+    var day = date[1];
+    if (month < 10) {
+      month = "0" + month;
+    }
+    if (day < 10) {
+      day = "0" + day;
+    }
+
+    return tempDate.getFullYear() + "-" + month + "-" + day;
+  };
+
   return (
     <TablePresenter
-      answer={answer}
       classes={classes}
       columns={columns}
       rows={rows}
@@ -148,9 +160,8 @@ const TableContainer = () => {
       getTime={getTime}
       validateIPAddress={validateIPAddress}
       includeIP={includeIP}
-      getDataFromDB={getDataFromDB}
-      separateTable={separateTable}
       buildFileSelector={buildFileSelector}
+      getTimeFromImport={getTimeFromImport}
     />
   );
 };

@@ -54,7 +54,6 @@ export default () => {
             </Modal.Footer>
           </Modal>
           <Routes />
-          {/* <TableContainer /> */}
         </Wrapper>
         <ToastContainer position={toast.POSITION.BOTTOM_LEFT} />
         <link
@@ -62,7 +61,6 @@ export default () => {
           href="https://fonts.googleapis.com/icon?family=Material+Icons"
         />
       </>
-      {/* //{" "} */}
     </Router>
   );
 };

@@ -1,5 +1,6 @@
 import React from "react";
 import styled, { keyframes } from "styled-components";
+import CloudDownloadIcon from "@material-ui/icons/CloudDownload";
 // import { Logo } from "./Icons";
 
 const Animation = keyframes`
@@ -20,4 +21,9 @@ const Loader = styled.div`
   text-align: center;
 `;
 
-export default () => <Loader>Loading</Loader>;
+export default () => (
+  <Loader>
+    <CloudDownloadIcon fontSize={"large"} />
+    <p>Fetching the Data. Please wait!</p>
+  </Loader>
+);

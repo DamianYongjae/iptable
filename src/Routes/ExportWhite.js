@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React from "react";
 import axios from "axios";
 import { Redirect } from "react-router-dom";
 import Loader from "../Component/Loader";
@@ -6,19 +6,17 @@ import Loader from "../Component/Loader";
 export default () => {
   const [inProcessW, setInProcessW] = React.useState(true);
 
-  useEffect(() => {
-    const getData = async () => {
-      try {
-        await axios.get("http://localhost:3305/:exportFile", {
-          params: { table: "white" }
-        });
-        setInProcessW(!inProcessW);
-      } catch (error) {
-        console.log(error);
-      }
-    };
-    getData();
-  }, [inProcessW, setInProcessW]);
+  const getData = async () => {
+    try {
+      await axios.get("http://localhost:3305/:exportFile", {
+        params: { table: "white" }
+      });
+      setInProcessW(!inProcessW);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+  getData();
 
   if (!inProcessW) {
     fetch(`http://localhost:3305/downloadWhite`)

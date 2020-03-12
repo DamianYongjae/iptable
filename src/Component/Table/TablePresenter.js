@@ -164,8 +164,8 @@ const TablePresenter = ({
   validateIPAddress,
   includeIP,
   ipgeolocationApi,
-  separateTable,
-  buildFileSelector
+  buildFileSelector,
+  getTimeFromImport
 }) => {
   const [openAll, setOpenAll] = React.useState(false);
   const [openBlack, setOpenBlack] = React.useState(false);
@@ -190,35 +190,12 @@ const TablePresenter = ({
   const target = React.useRef(null);
   const fileSelector = buildFileSelector();
 
-  var importedFile;
   var createdData;
 
   let fileReader;
 
   classes = useStyles();
   const textFieldClass = useStylesTextField();
-
-  const refreshTables = () => {
-    rowBlack = [];
-    rowWhite = [];
-
-    separateTable();
-  };
-
-  const getTimeFromImport = time => {
-    var date = time.split(" ");
-    var tempDate = new Date();
-    var month = new Date(Date.parse(date[0] + " 1, 2013")).getMonth() + 1;
-    var day = date[1];
-    if (month < 10) {
-      month = "0" + month;
-    }
-    if (day < 10) {
-      day = "0" + day;
-    }
-
-    return tempDate.getFullYear() + "-" + month + "-" + day;
-  };
 
   function handleResponse(json) {
     answer = json;
@@ -326,7 +303,6 @@ const TablePresenter = ({
   };
 
   const handleMemoModalClose = () => {
-    refreshTables();
     setOpenMemo(false);
   };
 
@@ -399,11 +375,11 @@ const TablePresenter = ({
           rows.splice(i, 1);
           handleClick(event, element);
           handleDeleteIp(event, element);
-          toast.info("selected Ip addresses are deleted!");
         }
       }
       setSelected([]);
-      window.location.reload();
+      input.setValue("");
+      toast.info("selected Ip addresses are deleted!");
     });
   };
 
@@ -444,9 +420,7 @@ const TablePresenter = ({
         toast.error("please input appropriate ip address format");
       }
     });
-    // window.location.reload();
     input.setValue("");
-    refreshTables();
   };
 
   fileSelector.addEventListener("change", handleFiles, false);
@@ -474,7 +448,6 @@ const TablePresenter = ({
   };
 
   const extractDataFromFile = data => {
-    var result = [];
     var row = [];
     data.forEach(element => {
       if (element !== "") {
@@ -496,22 +469,27 @@ const TablePresenter = ({
   return (
     <>
       <Overlay
-        key={"key"}
+        key={"overlay"}
         target={target.current}
         show={show}
         placement="right"
       >
         {props => (
-          <Tooltip id="overlay-example" theme="light" {...props}>
+          <Tooltip
+            key={"tooltip"}
+            id="overlay-example"
+            theme="light"
+            {...props}
+          >
             <div style={{ textAlign: "right" }}>
-              <TooltipButton onClick={closeOverlay} text={"x"}></TooltipButton>
+              <TooltipButton
+                key={"tbutton"}
+                onClick={closeOverlay}
+                text={"x"}
+              ></TooltipButton>
             </div>
             {result.split("\n").map((i, key) => {
-              return (
-                <div>
-                  <div key={key}>{i}</div>
-                </div>
-              );
+              return <div key={key}>{i}</div>;
             })}
           </Tooltip>
         )}
