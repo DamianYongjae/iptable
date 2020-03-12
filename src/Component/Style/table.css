@@ -25,6 +25,7 @@ body {
 .MuiTableCell-body {
   color: rgba(0, 0, 0, 0.87);
   text-align: center;
+  max-width: 110px;
 }
 .MuiPaper-elevation2 {
   width: 100%;
@@ -34,4 +35,12 @@ body {
   text-align: center;
   align-items: center;
   padding: auto;
+}
+
+.MuiInputBase-input:invalid {
+  padding: 15px;
+}
+
+.MuiPaper-root {
+  background-color: #fafafa;
 }

@@ -44,6 +44,22 @@ app.get("/", (req, res) => {
   });
 });
 
+app.get("/:exportFile"),
+  (req, res) => {
+    console.log("inside");
+    connection.query(
+      "select ipAddr from ips where isBlack = 1",
+      (error, results) => {
+        if (error) {
+          console.log("error");
+          throw error;
+        }
+        console.log("server send exported file");
+        console.log(results);
+      }
+    );
+  };
+
 app.post("/", (req, res) => {
   let data = {
     ipAddr: req.body.ipAddr,
@@ -51,7 +67,6 @@ app.post("/", (req, res) => {
     memo: req.body.memo,
     isBlack: req.body.isBlack
   };
-  // console.log(req.body);
   console.log("new row added: ", data);
   let sql = "insert into ips set ?";
   connection.query(sql, data, (err, results) => {

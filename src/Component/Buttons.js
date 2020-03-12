@@ -5,6 +5,7 @@ import PropTypes from "prop-types";
 const Container = styled.button`
   margin-left: 10px;
   width: 60px;
+  height: 40px;
   border: 0;
   border-radius: 4px;
   color: white;

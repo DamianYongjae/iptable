@@ -36,9 +36,7 @@ const TableContainer = () => {
   const exportData = [];
 
   var rowBlack = [];
-  var exportBlackData = [];
   var rowWhite = [];
-  var exportWhiteData = [];
 
   const columns = [
     { id: "ipAddr", label: "IP ADDRESS", minWidth: 170 },
@@ -63,10 +61,8 @@ const TableContainer = () => {
     rows.forEach(row => {
       if (row.isBlack) {
         rowBlack.push(row);
-        exportBlackData.push([row.ipAddr]);
       } else {
         rowWhite.push(row);
-        exportWhiteData.push([row.ipAddr]);
       }
     });
   };
@@ -141,8 +137,6 @@ const TableContainer = () => {
       exportData={exportData}
       rowBlack={rowBlack}
       rowWhite={rowWhite}
-      exportBlackData={exportBlackData}
-      exportWhiteData={exportWhiteData}
       ipgeolocationApi={ipgeolocationApi}
       createData={createData}
       getTime={getTime}

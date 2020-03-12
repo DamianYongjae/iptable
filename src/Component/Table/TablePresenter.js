@@ -1,6 +1,7 @@
 import React from "react";
 import axios from "axios";
 import styled from "styled-components";
+import { Link } from "react-router-dom";
 import { makeStyles } from "@material-ui/core/styles";
 import BlockIcon from "@material-ui/icons/Block";
 import InfoIcon from "@material-ui/icons/Info";
@@ -8,16 +9,17 @@ import ListAltIcon from "@material-ui/icons/ListAlt";
 import LockOpenIcon from "@material-ui/icons/LockOpen";
 import ExpandLess from "@material-ui/icons/ExpandLess";
 import ExpandMore from "@material-ui/icons/ExpandMore";
+import PlaylistAddIcon from "@material-ui/icons/PlaylistAdd";
 import AddCommentIcon from "@material-ui/icons/AddComment";
-import TextField from "@material-ui/core/TextField";
-import Dialog from "@material-ui/core/Dialog";
-import DialogActions from "@material-ui/core/DialogActions";
-import DialogContent from "@material-ui/core/DialogContent";
-import DialogContentText from "@material-ui/core/DialogContentText";
-import DialogTitle from "@material-ui/core/DialogTitle";
 import {
   Container,
   Checkbox,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
+  Divider,
   Paper,
   Table,
   TableHead,
@@ -26,6 +28,7 @@ import {
   TableContainer,
   TablePagination,
   TableRow,
+  TextField,
   IconButton,
   List,
   ListItem,
@@ -37,7 +40,6 @@ import Button from "../Buttons";
 import Input from "../Input";
 import useInput from "../../Hooks/useInput";
 import { toast } from "react-toastify";
-import { CSVLink } from "react-csv";
 import { Tooltip as ButtonTooltip } from "@material-ui/core";
 import { Tooltip, Overlay, Modal } from "react-bootstrap";
 import EnhancedTableHead from "./EnhancedTableHead";
@@ -101,6 +103,24 @@ const useStyles = makeStyles(theme => ({
   }
 }));
 
+const useStylesTextField = makeStyles(theme => ({
+  root: {
+    padding: "2px 4px",
+    display: "inline-flex",
+    alignItems: "left",
+    width: 300,
+    marginLeft: "10px",
+    backgroundColor: "#fafafa"
+  },
+  iconButton: {
+    padding: 10,
+    borderRadius: "25%"
+  },
+  divider: {
+    height: "auto",
+    margin: 4
+  }
+}));
 var addMemoTargetIp;
 var answer = { ip: "", country_name: "", state_prov: "", city: "", isp: "" };
 var deleteTarget;
@@ -139,8 +159,6 @@ const TablePresenter = ({
   exportData,
   rowBlack,
   rowWhite,
-  exportBlackData,
-  exportWhiteData,
   createData,
   getTime,
   validateIPAddress,
@@ -156,24 +174,29 @@ const TablePresenter = ({
   const [orderBy, setOrderBy] = React.useState("calories");
   const [page, setPage] = React.useState(0);
   const [rowsPerPage, setRowsPerPage] = React.useState(10);
+  const [blackPage, setBlackPage] = React.useState(0);
+  const [rowsPerBlackPage, setRowsPerBlackPage] = React.useState(10);
+  const [whitePage, setWhitePage] = React.useState(0);
+  const [rowsPerWhitePage, setRowsPerWhitePage] = React.useState(10);
   const [selected, setSelected] = React.useState([]);
   const [searchModal, setSearchModal] = React.useState(false);
   const [show, setShow] = React.useState(false);
+  const [table, setTable] = React.useState();
 
   const input = useInput("");
   const inputMemo = useInput("");
+  const inputMulti = useInput("");
   const isSelected = name => selected.indexOf(name) !== -1;
   const target = React.useRef(null);
 
   var createdData;
 
   classes = useStyles();
+  const textFieldClass = useStylesTextField();
 
   const refreshTables = () => {
     rowBlack = [];
     rowWhite = [];
-    exportBlackData = [];
-    exportWhiteData = [];
 
     separateTable();
   };
@@ -257,6 +280,24 @@ const TablePresenter = ({
     setPage(0);
   };
 
+  const handleChangeBlackPage = (event, newBlackPage) => {
+    setBlackPage(newBlackPage);
+  };
+
+  const handleChangeRowsPerBlackPage = event => {
+    setRowsPerBlackPage(+event.target.value);
+    setBlackPage(0);
+  };
+
+  const handleChangeWhitePage = (event, newWhitePage) => {
+    setWhitePage(newWhitePage);
+  };
+
+  const handleChangeRowsPerWhitePage = event => {
+    setRowsPerWhitePage(+event.target.value);
+    setWhitePage(0);
+  };
+
   function closeOverlay() {
     setShow(false);
   }
@@ -303,19 +344,21 @@ const TablePresenter = ({
   const handleAddMemo = (event, ip, memo) => {
     var data = { ipAddr: ip, memo: memo };
 
-    axios.put(`http://localhost:3305`, { data });
+    axios.put(`http://localhost:3305`, { data }).then(res => {
+      setTable(res.data);
+    });
     window.location.reload();
   };
 
-  const addIpToTable = () => {
-    if (validateIPAddress(input.value)) {
-      if (!includeIP(exportData, input.value)) {
-        exportData.push([input.value]);
-        createdData = createData(input.value, getTime());
+  const addIpToTable = value => {
+    if (validateIPAddress(value)) {
+      if (!includeIP(exportData, value)) {
+        exportData.push([value]);
+        createdData = createData(value, getTime());
         rows.push(createdData);
         rowBlack.push(createdData);
-        exportBlackData.push([input.value]);
-        toast.info("enter pressed. INPUT VALUE: " + input.value);
+        toast.info("enter pressed. INPUT VALUE: " + value);
+        handleAddNewIp();
       } else {
         toast.error("duplicated ip address");
       }
@@ -323,7 +366,6 @@ const TablePresenter = ({
       toast.error("please input appropriate ip address format");
     }
     input.setValue("");
-    handleAddNewIp();
   };
 
   const deleteIpFromTable = event => {
@@ -331,6 +373,13 @@ const TablePresenter = ({
       for (var i = 0; i < exportData.length; i++) {
         if (exportData[i][0] === element) {
           exportData.splice(i, 1);
+          if (rows[i]["isBlack"] === 1) {
+            var indexB = rowBlack.indexOf(rows[i]);
+            rowBlack.splice(indexB, 1);
+          } else {
+            var indexW = rowWhite.indexOf(rows[i]);
+            rowWhite.splice(indexW, 1);
+          }
           rows.splice(i, 1);
           handleClick(event, element);
           handleDeleteIp(event, element);
@@ -347,7 +396,7 @@ const TablePresenter = ({
     if (which === 13) {
       event.preventDefault();
       try {
-        addIpToTable();
+        addIpToTable(input.value);
       } catch {
         toast.error("error occurred while adding");
       }
@@ -453,13 +502,43 @@ const TablePresenter = ({
         <Input
           value={input.value}
           onChange={input.onChange}
-          placeholder="ex) 192.168.1.1"
+          placeholder="ex) 192.168.1.1 and press enter"
           onKeyPress={onKeyPress}
+          className={textFieldClass.root}
+          padding="30px"
         />
 
-        <Button text={"import"} />
+        <Paper className={textFieldClass.root}>
+          <TextField
+            id="standard-textarea"
+            label="Input multiple IP addresses"
+            placeholder="Put IP addresses and click button"
+            fullWidth
+            value={inputMulti.value}
+            onChange={inputMulti.onChange}
+            multiline
+          />
+          <Divider className={textFieldClass.divider} orientation="vertical" />
+          <IconButton
+            type="submit"
+            className={textFieldClass.iconButton}
+            aria-label="add"
+            onClick={() => {
+              var addresses = inputMulti.value.split("\n");
+              addresses.forEach(ip => {
+                addIpToTable(ip);
+              });
+              inputMulti.setValue("");
+            }}
+          >
+            <PlaylistAddIcon />
+          </IconButton>
+        </Paper>
+        <span style={{ padding: "10px 10px" }}>
+          <Button text={"import"} />
 
-        <Button text={"search"} onClick={() => setSearchModal(true)} />
+          <Button text={"search"} onClick={() => setSearchModal(true)} />
+        </span>
         <List
           component="nav"
           aria-labelledby="nested-list-subheader"
@@ -536,6 +615,8 @@ const TablePresenter = ({
                                       padding="none"
                                     >
                                       {row.ipAddr}
+                                    </TableCell>
+                                    <TableCell padding="checkbox">
                                       <ButtonTooltip title="IP INFO">
                                         <IconButton
                                           aria-label="info"
@@ -582,7 +663,7 @@ const TablePresenter = ({
                                       align="center"
                                       padding="checkbox"
                                     >
-                                      {row.isBlack === 1 ? (
+                                      {row.isBlack ? (
                                         <ButtonTooltip
                                           title="Black list"
                                           aria-label="info"
@@ -650,8 +731,8 @@ const TablePresenter = ({
                         <TableBody>
                           {rowBlack
                             .slice(
-                              page * rowsPerPage,
-                              page * rowsPerPage + rowsPerPage
+                              blackPage * rowsPerBlackPage,
+                              blackPage * rowsPerBlackPage + rowsPerBlackPage
                             )
                             .map(row => {
                               return (
@@ -681,22 +762,19 @@ const TablePresenter = ({
                         </TableBody>
                       </Table>
                       <div style={{ paddingTop: "10px", textAlign: "left" }}>
-                        <CSVLink
-                          data={exportBlackData}
-                          filename={"blacklist.csv"}
-                        >
+                        <Link to="/exportBlack">
                           <Button text={"export"}></Button>
-                        </CSVLink>
+                        </Link>
                       </div>
                     </TableContainer>
                     <TablePagination
                       rowsPerPageOptions={[10, 25, 100]}
                       component="div"
                       count={rowBlack.length}
-                      rowsPerPage={rowsPerPage}
-                      page={page}
-                      onChangePage={handleChangePage}
-                      onChangeRowsPerPage={handleChangeRowsPerPage}
+                      rowsPerPage={rowsPerBlackPage}
+                      page={blackPage}
+                      onChangePage={handleChangeBlackPage}
+                      onChangeRowsPerPage={handleChangeRowsPerBlackPage}
                     />
                   </Paper>
                 </Container>
@@ -734,8 +812,8 @@ const TablePresenter = ({
                         <TableBody>
                           {rowWhite
                             .slice(
-                              page * rowsPerPage,
-                              page * rowsPerPage + rowsPerPage
+                              whitePage * rowsPerWhitePage,
+                              whitePage * rowsPerWhitePage + rowsPerWhitePage
                             )
                             .map(row => {
                               return (
@@ -765,22 +843,19 @@ const TablePresenter = ({
                         </TableBody>
                       </Table>
                       <div style={{ paddingTop: "10px", textAlign: "left" }}>
-                        <CSVLink
-                          data={exportWhiteData}
-                          filename={"whitelist.csv"}
-                        >
+                        <Link to="/exportWhite">
                           <Button text={"export"}></Button>
-                        </CSVLink>
+                        </Link>
                       </div>
                     </TableContainer>
                     <TablePagination
                       rowsPerPageOptions={[10, 25, 100]}
                       component="div"
                       count={rowWhite.length}
-                      rowsPerPage={rowsPerPage}
-                      page={page}
-                      onChangePage={handleChangePage}
-                      onChangeRowsPerPage={handleChangeRowsPerPage}
+                      rowsPerPage={rowsPerWhitePage}
+                      page={whitePage}
+                      onChangePage={handleChangeWhitePage}
+                      onChangeRowsPerPage={handleChangeRowsPerWhitePage}
                     />
                   </Paper>
                 </Container>

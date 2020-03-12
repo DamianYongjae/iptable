@@ -4,7 +4,7 @@ import PropTypes from "prop-types";
 import { TextField } from "@material-ui/core";
 
 const Container = styled(TextField)`
-  margin-top: 10px;
+  margin-top: 30px;
   margin-left: 10px;
   background-color: #fafafa;
   padding: 5px;
