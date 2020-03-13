@@ -7455,6 +7455,11 @@ mysql@^2.18.1:
     safe-buffer "5.1.2"
     sqlstring "2.3.1"
 
+n@^6.4.0:
+  version "6.4.0"
+  resolved "https://registry.yarnpkg.com/n/-/n-6.4.0.tgz#d42f15ba4ecb8ae4323897b4e0ab2e3c183fa372"
+  integrity sha512-sMDBIB/36b27Ess3kKiIFqeKWDyVpU0BuCWpRdw1wKsleDOPDj2trhm8hGi7pEBJ+/ouDLoh5CkBWQsVQZ2VHQ==
+
 nan@^2.12.1:
   version "2.14.0"
   resolved "https://registry.yarnpkg.com/nan/-/nan-2.14.0.tgz#7818f722027b2459a86f0295d434d1fc2336c52c"

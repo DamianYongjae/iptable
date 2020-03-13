@@ -16,6 +16,7 @@
     "js": "^0.1.0",
     "material-table": "^1.57.2",
     "mysql": "^2.18.1",
+    "n": "^6.4.0",
     "nodemon": "^2.0.2",
     "pivotal-ui": "^19.2.3",
     "prop-types": "^15.7.2",
