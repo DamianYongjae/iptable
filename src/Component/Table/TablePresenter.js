@@ -325,20 +325,24 @@ const TablePresenter = ({
     setShow(true);
   }
 
-  const handleAddNewIp = event => {
-    var data = createdData;
+  const handleAddNewIp = async event => {
+    try {
+      var data = createdData;
 
-    axios.post(`http://localhost:3305`, data);
+      await axios.post(`http://localhost:3305`, data);
+    } catch (error) {
+      console.log(error);
+    }
   };
 
-  const handleDeleteIp = (event, data) => {
-    axios.delete(`http://localhost:3305`, { params: { data } });
+  const handleDeleteIp = async (event, data) => {
+    await axios.delete(`http://localhost:3305`, { params: { data } });
   };
 
-  const handleAddMemo = (event, ip, memo) => {
+  const handleAddMemo = async (event, ip, memo) => {
     var data = { ipAddr: ip, memo: memo };
 
-    axios.put(`http://localhost:3305`, { data });
+    await axios.put(`http://localhost:3305`, { data });
     window.location.reload();
   };
 
@@ -360,27 +364,31 @@ const TablePresenter = ({
     input.setValue("");
   };
 
-  const deleteIpFromTable = event => {
-    deleteTarget.forEach(element => {
-      for (var i = 0; i < exportData.length; i++) {
-        if (exportData[i][0] === element) {
-          exportData.splice(i, 1);
-          if (rows[i]["isBlack"] === 1) {
-            var indexB = rowBlack.indexOf(rows[i]);
-            rowBlack.splice(indexB, 1);
-          } else {
-            var indexW = rowWhite.indexOf(rows[i]);
-            rowWhite.splice(indexW, 1);
+  const deleteIpFromTable = async event => {
+    try {
+      await deleteTarget.forEach(element => {
+        for (var i = 0; i < exportData.length; i++) {
+          if (exportData[i][0] === element) {
+            exportData.splice(i, 1);
+            if (rows[i]["isBlack"] === 1) {
+              var indexB = rowBlack.indexOf(rows[i]);
+              rowBlack.splice(indexB, 1);
+            } else {
+              var indexW = rowWhite.indexOf(rows[i]);
+              rowWhite.splice(indexW, 1);
+            }
+            rows.splice(i, 1);
+            handleClick(event, element);
+            handleDeleteIp(event, element);
           }
-          rows.splice(i, 1);
-          handleClick(event, element);
-          handleDeleteIp(event, element);
         }
-      }
-      setSelected([]);
-      input.setValue("");
-      toast.info("selected Ip addresses are deleted!");
-    });
+        setSelected([]);
+        input.setValue("");
+        toast.info("selected Ip addresses are deleted!");
+      });
+    } catch (error) {
+      console.log(error);
+    }
   };
 
   const onKeyPress = async event => {
@@ -403,24 +411,28 @@ const TablePresenter = ({
     }
   };
 
-  const addImportedDataToTable = data => {
-    data.forEach(element => {
-      if (validateIPAddress(element["ipAddr"])) {
-        if (!includeIP(exportData, element["ipAddr"])) {
-          exportData.push([element["ipAddr"]]);
-          rows.push(element);
-          rowBlack.push(element);
-          toast.info("enter pressed. INPUT VALUE: " + element["ipAddr"]);
-          createdData = element;
-          handleAddNewIp();
+  const addImportedDataToTable = async data => {
+    try {
+      await data.forEach(element => {
+        if (validateIPAddress(element["ipAddr"])) {
+          if (!includeIP(exportData, element["ipAddr"])) {
+            exportData.push([element["ipAddr"]]);
+            rows.push(element);
+            rowBlack.push(element);
+            toast.info("enter pressed. INPUT VALUE: " + element["ipAddr"]);
+            createdData = element;
+            handleAddNewIp();
+          } else {
+            toast.error("duplicated ip address: " + element["ipAddr"]);
+          }
         } else {
-          toast.error("duplicated ip address: " + element["ipAddr"]);
+          toast.error("please input appropriate ip address format");
         }
-      } else {
-        toast.error("please input appropriate ip address format");
-      }
-    });
-    input.setValue("");
+      });
+      input.setValue("");
+    } catch (error) {
+      console.log(error);
+    }
   };
 
   fileSelector.addEventListener("change", handleFiles, false);
