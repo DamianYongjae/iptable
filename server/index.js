@@ -1,10 +1,12 @@
-const http = require("http");
 const cors = require("cors");
 const express = require("express");
 const app = express();
 const mysql = require("mysql");
 const bodyParser = require("body-parser");
-
+const pino = require("express-pino-logger")();
+const fastcsv = require("fast-csv");
+const fs = require("fs");
+const fsw = require("fs");
 app.use(cors());
 
 var connection = mysql.createConnection({
@@ -28,12 +30,18 @@ app.use(
     extended: true
   })
 );
+app.use(pino);
 
 var server = app.listen("3305", "localhost", () => {
   var host = server.address().address;
   var port = server.address().port;
   console.log(server.address());
   console.log("app listening at http//%s:%s", host, port);
+});
+
+app.get("/downloadWhite", (req, res) => {
+  var file = fsw.createReadStream("./whitelist.csv");
+  file.pipe(res);
 });
 
 app.get("/", (req, res) => {
@@ -44,21 +52,40 @@ app.get("/", (req, res) => {
   });
 });
 
-app.get("/:exportFile"),
-  (req, res) => {
-    console.log("inside");
-    connection.query(
-      "select ipAddr from ips where isBlack = 1",
-      (error, results) => {
-        if (error) {
-          console.log("error");
-          throw error;
-        }
-        console.log("server send exported file");
-        console.log(results);
-      }
-    );
-  };
+app.get("/downloadBlack", (req, res) => {
+  var file = fs.createReadStream("./blacklist.csv");
+  file.pipe(res);
+});
+
+app.get("/:exportFile", (req, res) => {
+  var filename = "";
+  let query = "";
+  console.log(req.query.table);
+  if (req.query.table === "black") {
+    filename = "blacklist.csv";
+    query = "select ipAddr from ips where isBlack = 1";
+  } else {
+    filename = "whitelist.csv";
+    query = "select ipAddr from ips where isBlack = 0";
+  }
+
+  const bl = fs.createWriteStream(filename);
+  connection.query(query, (error, data, results) => {
+    if (error) {
+      throw error;
+    }
+    console.log("server send exported file");
+    const jsonData = JSON.parse(JSON.stringify(data));
+
+    fastcsv
+      .write(jsonData, { header: false })
+      .on("finish", function() {
+        console.log("creating file is finished!");
+      })
+      .pipe(bl);
+    res.end();
+  });
+});
 
 app.post("/", (req, res) => {
   let data = {
