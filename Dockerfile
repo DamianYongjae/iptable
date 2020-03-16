@@ -7,8 +7,6 @@ ENV PATH /node_modules/.bin:$PATH
 COPY . .
 COPY package.json /package.json
 RUN yarn install
-RUN yarn 
-RUN yarn build
 
 CMD ["yarn","dev"]
 
