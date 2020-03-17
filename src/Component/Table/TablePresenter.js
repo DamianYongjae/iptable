@@ -329,20 +329,20 @@ const TablePresenter = ({
     try {
       var data = createdData;
 
-      await axios.post(`http://localhost:3305`, data);
+      await axios.post(`http://localhost:3305/api`, data);
     } catch (error) {
       console.log(error);
     }
   };
 
   const handleDeleteIp = async (event, data) => {
-    await axios.delete(`http://localhost:3305`, { params: { data } });
+    await axios.delete(`http://localhost:3305/api`, { params: { data } });
   };
 
   const handleAddMemo = async (event, ip, memo) => {
     var data = { ipAddr: ip, memo: memo };
 
-    await axios.put(`http://localhost:3305`, { data });
+    await axios.put(`http://localhost:3305/api`, { data });
     window.location.reload();
   };
 

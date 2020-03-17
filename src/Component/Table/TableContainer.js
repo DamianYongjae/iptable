@@ -66,7 +66,7 @@ const TableContainer = () => {
   };
 
   useEffect(() => {
-    axios.get(`http://localhost:3305`).then(res => {
+    axios.get(`http://localhost:3305/api`).then(res => {
       setTable(res.data);
     });
   }, []);
