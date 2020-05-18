@@ -39,7 +39,6 @@
     "styled-reset": "^4.1.0",
     "yarn-run-all": "^3.1.1"
   },
-  "proxy": "http://localhost:3305",
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
