@@ -18,7 +18,7 @@
     "ip-geolocation-api-javascript-sdk": "^1.0.7",
     "js": "^0.1.0",
     "material-table": "^1.57.2",
-    "minimist": "^1.2.3",
+    "minimist": "^1.2.6",
     "mysql": "^2.18.1",
     "n": "^6.4.0",
     "node-env-run": "^3.0.2",
